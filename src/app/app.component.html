@@ -1,0 +1,245 @@
+<!-- Display popup modal order setting -->
+<ng-template #content let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title">Setting order</h4>
+    <button
+      type="button"
+      class="close"
+      aria-label="Close"
+      (click)="modal.dismiss('Cross click')"
+    >
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <form (ngSubmit)="onSubmit(addForm)"  #addForm="ngForm">
+      <div class="form-group">
+        <label>Number per page</label>
+        <div class="input-group">
+          <input type="text"
+            class="form-control"
+            placeholder="Enter a number from 1 to 50"
+            name="number"
+            [(ngModel)]="number"
+          />
+        </div>
+        <label>API key </label>
+        <div class="input-group">
+          <input type="text" class="form-control" placeholder="Enter API key" name="api"  [(ngModel)]="api"/>
+        </div>
+      </div>
+      <button
+      style="float: right"
+      type="submit"
+      class="btn btn-outline-dark"
+    >
+      Save
+    </button>
+    </form>
+  </div>
+  <div class="modal-footer">
+  </div>
+</ng-template>
+<!-- Display popup screen play video -->
+<ng-template #contentPlayVideo let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">{{ title }}</h4>
+    <button
+      type="button"
+      class="close"
+      aria-label="Close"
+      (click)="modal.dismiss('Cross click')"
+    >
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body" style="width: 100%;height: 100vh;">
+    <div style="float: left;width: 60%;height: 100vh;">
+      <iframe
+        [src]="trustedUrl"
+        style="height: 80%;width: 100%"
+        frameborder="0"
+        allowfullscreen="allowfullscreen"
+        mozallowfullscreen="mozallowfullscreen"
+        msallowfullscreen="msallowfullscreen"
+        oallowfullscreen="oallowfullscreen"
+        webkitallowfullscreen="webkitallowfullscreen"
+      ></iframe>
+      <div style="height: 20%;">
+        <div *ngFor="let item of videosdetail" style="width: 100%;">
+          <div style="display: inline-block;width: 25%;">
+            <strong>Like: </strong>{{ item.statistics.likeCount }}
+          </div>
+          <div style="display: inline-block;width: 25%;">
+            <strong>Dislike: </strong>{{ item.statistics.dislikeCount }}
+          </div>
+          <div style="width: 37%;float: right">
+            <strong>Totalviews: </strong>{{ item.statistics.viewCount }}
+          </div>
+          <div><strong>Channel: </strong>{{ channelName }}</div>
+          <div
+            style=" white-space: nowrap; 
+            width: 100%; 
+            overflow: hidden;
+            text-overflow: ellipsis; "
+          >
+            <strong>Description: </strong> {{ description }}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="float: right;width: 38%;text-align: left;height: 100vh;">
+      <!-- display list video related -->
+      <div
+        *ngIf="videosRelated.length != 0"
+        style="overflow-y: scroll; height:95vh"
+      >
+        <div
+          *ngFor="
+            let video of (videosRelated
+              | paginate: { itemsPerPage: 8, currentPage: p1 })
+          "
+          style="width: 100%"
+        >
+          <div style="display: inline-block;width: 30%;">
+            <img
+              (click)="
+                modal.dismiss('Cross click');
+                openVerticallyCenteredPlayVideo(contentPlayVideo);
+                playVideo(
+                  video.id,
+                  video.snippet.description,
+                  video.snippet.title,
+                  video.snippet.channelTitle
+                )
+              "
+              [src]="
+                video.snippet.thumbnails.default.url == null
+                  ? iimagess
+                  : video.snippet.thumbnails.default.url
+              "
+              style="width: 100%;position: relative;"
+            />
+          </div>
+          <div
+            style="float: right;
+              text-align: left;overflow: hidden; white-space: nowrap; text-overflow: ellipsis;width: 70%;"
+          >
+            <p style="padding-top: 0px">
+              <strong>Title:</strong>
+              {{ video.snippet.title }}
+            </p>
+          </div>
+          <hr />
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<!-- Display main content -->
+<body>
+  <h1 id="title">FaTube</h1>
+  <div id="form-outer">
+    <!-- setting button -->
+    <button style="float: right;" (click)="openVerticallyCentered(content)">
+      <i class="fas fa-cog"></i>
+    </button>
+    <!-- Text input -->
+    <input
+      style="display: block;width: 100%"
+      name="searchValue"
+      id="input-form"
+      [(ngModel)]="searchValue"
+      type="text"
+      (keyup.enter)="handleInput()"
+      placeholder="Type to search for videos"
+    />
+    <!-- Option select for filter -->
+    <select
+      style="display: inline-block;width: 23%"
+      (change)="selectOption($event.target.value)"
+      [(ngModel)]="selected"
+    >
+      <option [value]="order.id" *ngFor="let order of orders">{{
+        order.name
+      }}</option>
+    </select>
+    <br />
+    <br />
+    <hr />
+    <!-- Display text about result search -->
+    <span *ngIf="(!showVideo && searchValue != '') || searchValue == ''"
+      ><strong> No Result Search</strong></span
+    >
+    <span *ngIf="showVideo && searchValue != ''"
+      ><strong>List Result</strong></span
+    >
+    <hr />
+    <!-- Display list videos -->
+    <div class="top-track" *ngIf="checkVideo()">
+      <div
+        *ngFor="
+          let video of (videos | paginate: { itemsPerPage: 5, currentPage: p })
+        "
+        style="width: 100%;"
+      >
+        <div style="display: inline-block;width: 30%;">
+          <img
+            [src]="
+              video.snippet.thumbnails.default.url == null
+                ? iimagess
+                : video.snippet.thumbnails.default.url
+            "
+            style="width: 100%;position: relative;"
+          />
+          <p
+            style="padding-top: 0px;text-align: left;overflow: hidden; white-space: nowrap; text-overflow: ellipsis;width: 100%; margin-bottom: 1px;margin-top: 4px"
+          >
+            <strong>Release:</strong>
+            {{ video.snippet.publishedAt | date: 'dd/MM/yyyy' }}
+          </p>
+          <p
+            style="padding-top: 0px;text-align: left;overflow: hidden; white-space: nowrap; text-overflow: ellipsis;width: 100%;margin-bottom: 1px"
+          >
+            <strong>Channel:</strong>
+            {{ video.snippet.channelTitle }}
+          </p>
+        </div>
+        <div style="float: right;width: 70%;text-align: left;">
+          <p style="padding-top: 0px">
+            <strong>Title:</strong>
+            {{ video.snippet.title }}
+          </p>
+          <p style="padding-top: 0px;">
+            <strong>Description:</strong>
+            {{ video.snippet.description }}
+          </p>
+          <p style="padding-top: 0px;">
+            <strong
+              ><a
+                (click)="
+                  openVerticallyCenteredPlayVideo(contentPlayVideo);
+                  playVideo(
+                    video.id,
+                    video.snippet.description,
+                    video.snippet.title,
+                    video.snippet.channelTitle
+                  )
+                "
+                >Open video</a
+              ></strong
+            >
+          </p>
+        </div>
+        <hr />
+      </div>
+      <!-- Paging -->
+      <pagination-controls
+        (pageChange)="p = $event"
+        previousLabel=""
+        nextLabel=""
+      ></pagination-controls>
+    </div>
+  </div>
+</body>

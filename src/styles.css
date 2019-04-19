@@ -1,0 +1,10 @@
+/* You can add global styles to this file, and also import other style files */
+.myCustomModalClassSetting >.modal-lg { 
+    max-height: 100% !important;
+    z-index: 99000 !important;
+}
+.myCustomModalClassPlayVideo >.modal-lg { 
+    max-width: 95% !important; 
+    max-height: 100% !important;
+    z-index: 99000 !important;
+}
